@@ -104,13 +104,20 @@ const Students = () => {
   };
 
   const downloadTemplate = () => {
-    const template = "roll,name,enrollment,email,phone,sem,college,section,system_no\n";
+    const template = `roll,name,enrollment,email,phone,sem,college,section,system_no
+101,John Doe,EN2023001,john.doe@college.edu,9876543210,5,ABC Engineering College,A,PC-01
+102,Jane Smith,EN2023002,jane.smith@college.edu,9876543211,5,ABC Engineering College,A,PC-02
+103,Mike Johnson,EN2023003,mike.j@college.edu,9876543212,5,ABC Engineering College,B,PC-03
+104,Sarah Williams,EN2023004,sarah.w@college.edu,9876543213,6,ABC Engineering College,B,PC-04
+105,David Brown,EN2023005,david.b@college.edu,9876543214,6,ABC Engineering College,A,PC-05`;
+    
     const blob = new Blob([template], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "student_template.csv";
     a.click();
+    toast.success("Template downloaded with example data");
   };
 
   if (authLoading) {
