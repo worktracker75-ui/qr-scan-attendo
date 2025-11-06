@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,27 @@ const Students = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchStudents();
+    }
+  }, [user]);
+
+  const fetchStudents = async () => {
+    const { data, error } = await supabase
+      .from("students")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      toast.error("Failed to load students");
+    } else {
+      setStudents(data || []);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,6 +106,7 @@ const Students = () => {
             }
           } else {
             toast.success(`Successfully uploaded ${validatedData.length} students`);
+            fetchStudents();
           }
           
           setUploading(false);
@@ -193,6 +215,43 @@ const Students = () => {
             )}
           </CardContent>
         </Card>
+
+        {students.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Recently Imported Students</CardTitle>
+              <CardDescription>Last 10 imported students</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Roll</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Enrollment</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Section</TableHead>
+                      <TableHead>System No</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell>{student.roll}</TableCell>
+                        <TableCell>{student.name}</TableCell>
+                        <TableCell>{student.enrollment}</TableCell>
+                        <TableCell>{student.email || "N/A"}</TableCell>
+                        <TableCell>{student.section || "N/A"}</TableCell>
+                        <TableCell>{student.system_no || "N/A"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -45,10 +45,10 @@ const Scanner = () => {
 
   const onScanSuccess = async (decodedText: string) => {
     try {
-      const qrData = JSON.parse(decodedText);
-      const { enrollment, system_no, signature } = qrData;
+      // QR now contains only enrollment number
+      const enrollment = decodedText.trim();
 
-      if (!enrollment || !system_no) {
+      if (!enrollment) {
         toast.error("Invalid QR code format");
         return;
       }
@@ -100,7 +100,7 @@ const Scanner = () => {
       const { error: insertError } = await supabase.from("attendance").insert({
         student_id: student.id,
         session_id: session.id,
-        system_no,
+        system_no: student.system_no || "Not assigned",
         scanned_by: user?.id,
       });
 
