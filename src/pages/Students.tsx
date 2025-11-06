@@ -7,9 +7,19 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import Papa from "papaparse";
-import { ArrowLeft, Upload, Download } from "lucide-react";
+import { ArrowLeft, Upload, Download, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { z } from "zod";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const studentSchema = z.object({
   roll: z.string().min(1, "Roll number required"),
@@ -30,6 +40,9 @@ const Students = () => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -125,6 +138,57 @@ const Students = () => {
     }
   };
 
+  const confirmDelete = (student: any) => {
+    setStudentToDelete(student);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteStudent = async () => {
+    if (!studentToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("students")
+        .delete()
+        .eq("id", studentToDelete.id);
+
+      if (error) throw error;
+
+      toast.success(`Deleted ${studentToDelete.name}`);
+      fetchStudents();
+      setDeleteDialogOpen(false);
+      setStudentToDelete(null);
+    } catch (error: any) {
+      toast.error("Failed to delete student: " + error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const deleteAllStudents = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL student data? This cannot be undone!")) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("students")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+
+      if (error) throw error;
+
+      toast.success("All student data deleted");
+      setStudents([]);
+    } catch (error: any) {
+      toast.error("Failed to delete all students: " + error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const downloadTemplate = () => {
     const template = `roll,name,enrollment,email,phone,sem,college,section,system_no
 101,John Doe,EN2023001,john.doe@college.edu,9876543210,5,ABC Engineering College,A,PC-01
@@ -167,7 +231,7 @@ const Students = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button variant="outline" onClick={downloadTemplate}>
                 <Download className="mr-2 h-4 w-4" />
                 Download Template
@@ -184,6 +248,16 @@ const Students = () => {
                 <Upload className="mr-2 h-4 w-4" />
                 {uploading ? "Uploading..." : "Upload"}
               </Button>
+              {students.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={deleteAllStudents}
+                  disabled={deleting}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete All Data
+                </Button>
+              )}
             </div>
 
             {preview.length > 0 && (
@@ -233,6 +307,7 @@ const Students = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Section</TableHead>
                       <TableHead>System No</TableHead>
+                      <TableHead className="w-20">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -244,6 +319,15 @@ const Students = () => {
                         <TableCell>{student.email || "N/A"}</TableCell>
                         <TableCell>{student.section || "N/A"}</TableCell>
                         <TableCell>{student.system_no || "N/A"}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => confirmDelete(student)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -252,6 +336,28 @@ const Students = () => {
             </CardContent>
           </Card>
         )}
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{studentToDelete?.name}</strong> ({studentToDelete?.enrollment})?
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteStudent}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

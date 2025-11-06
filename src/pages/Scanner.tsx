@@ -23,16 +23,41 @@ const Scanner = () => {
     };
   }, [scanner]);
 
-  const startScanning = () => {
-    const qrScanner = new Html5QrcodeScanner(
-      "qr-reader",
-      { fps: 10, qrbox: 250 },
-      false
-    );
+  const startScanning = async () => {
+    try {
+      console.log("Starting QR scanner...");
+      
+      // Check if camera permissions are available
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true });
+          console.log("Camera permission granted");
+        } catch (permError) {
+          console.error("Camera permission error:", permError);
+          toast.error("Camera permission denied. Please allow camera access.");
+          return;
+        }
+      }
 
-    qrScanner.render(onScanSuccess, onScanError);
-    setScanner(qrScanner);
-    setScanning(true);
+      const qrScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        },
+        false
+      );
+
+      console.log("QR Scanner initialized, rendering...");
+      qrScanner.render(onScanSuccess, onScanError);
+      setScanner(qrScanner);
+      setScanning(true);
+      toast.success("Scanner started");
+    } catch (error: any) {
+      console.error("Error starting scanner:", error);
+      toast.error("Failed to start scanner: " + error.message);
+    }
   };
 
   const stopScanning = () => {
@@ -121,8 +146,8 @@ const Scanner = () => {
 
   const onScanError = (error: any) => {
     // Ignore common scanning errors
-    if (!error.includes("NotFoundException")) {
-      console.error(error);
+    if (typeof error === 'string' && !error.includes("NotFoundException")) {
+      console.error("QR Scan Error:", error);
     }
   };
 
