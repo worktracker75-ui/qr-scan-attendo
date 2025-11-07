@@ -74,16 +74,27 @@ const GenerateQR = () => {
       return;
     }
 
-    const newQrCodes = new Map();
-    for (const studentId of selectedStudents) {
-      const student = students.find(s => s.id === studentId);
-      if (student) {
-        const qrDataUrl = await generateQRForStudent(student.enrollment);
-        newQrCodes.set(studentId, qrDataUrl);
+    try {
+      toast.info("Generating QR codes...");
+      const newQrCodes = new Map();
+      
+      for (const studentId of selectedStudents) {
+        const student = students.find(s => s.id === studentId);
+        if (student) {
+          console.log("Generating QR for:", student.enrollment);
+          const qrDataUrl = await generateQRForStudent(student.enrollment);
+          console.log("Generated QR data URL length:", qrDataUrl.length);
+          newQrCodes.set(studentId, qrDataUrl);
+        }
       }
+      
+      console.log("Total QR codes generated:", newQrCodes.size);
+      setQrCodes(newQrCodes);
+      toast.success(`Generated ${newQrCodes.size} QR codes`);
+    } catch (error: any) {
+      console.error("Error generating QR codes:", error);
+      toast.error("Failed to generate QR codes: " + error.message);
     }
-    setQrCodes(newQrCodes);
-    toast.success(`Generated ${newQrCodes.size} QR codes`);
   };
 
   const sendQRsViaEmail = async () => {
@@ -242,16 +253,30 @@ const GenerateQR = () => {
               </div>
 
               {qrCodes.size > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
-                  {Array.from(qrCodes.entries()).slice(0, 8).map(([studentId, qrUrl]) => {
-                    const student = students.find(s => s.id === studentId);
-                    return (
-                      <div key={studentId} className="text-center">
-                        <img src={qrUrl} alt="QR" className="w-full border rounded p-2 bg-white" />
-                        <p className="text-xs mt-1 truncate">{student?.name}</p>
-                      </div>
-                    );
-                  })}
+                <div className="space-y-4">
+                  <div className="bg-success/10 p-3 rounded border border-success/20">
+                    <p className="text-sm font-medium text-success">
+                      ✓ {qrCodes.size} QR code(s) generated successfully
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+                    {Array.from(qrCodes.entries()).map(([studentId, qrUrl]) => {
+                      const student = students.find(s => s.id === studentId);
+                      return (
+                        <div key={studentId} className="text-center space-y-2">
+                          <img 
+                            src={qrUrl} 
+                            alt={`QR code for ${student?.name}`}
+                            className="w-full border-2 border-border rounded p-2 bg-white" 
+                          />
+                          <div className="text-xs space-y-1">
+                            <p className="font-medium truncate">{student?.name}</p>
+                            <p className="text-muted-foreground">{student?.enrollment}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </CardContent>
