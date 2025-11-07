@@ -27,16 +27,32 @@ const Scanner = () => {
     try {
       console.log("Starting QR scanner...");
       
-      // Check if camera permissions are available
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          await navigator.mediaDevices.getUserMedia({ video: true });
-          console.log("Camera permission granted");
-        } catch (permError) {
-          console.error("Camera permission error:", permError);
-          toast.error("Camera permission denied. Please allow camera access.");
-          return;
+      // Check if browser supports camera
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("Camera not supported on this device/browser");
+        console.error("mediaDevices API not available");
+        return;
+      }
+
+      // Request camera permission
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment" } 
+        });
+        console.log("Camera permission granted");
+        
+        // Stop the stream immediately as Html5QrcodeScanner will request it again
+        stream.getTracks().forEach(track => track.stop());
+      } catch (permError: any) {
+        console.error("Camera permission error:", permError);
+        if (permError.name === "NotAllowedError") {
+          toast.error("Camera permission denied. Please allow camera access in browser settings.");
+        } else if (permError.name === "NotFoundError") {
+          toast.error("No camera found on this device.");
+        } else {
+          toast.error("Camera access error: " + permError.message);
         }
+        return;
       }
 
       const qrScanner = new Html5QrcodeScanner(
@@ -44,7 +60,8 @@ const Scanner = () => {
         { 
           fps: 10, 
           qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
+          aspectRatio: 1.0,
+          rememberLastUsedCamera: true,
         },
         false
       );
@@ -53,7 +70,7 @@ const Scanner = () => {
       qrScanner.render(onScanSuccess, onScanError);
       setScanner(qrScanner);
       setScanning(true);
-      toast.success("Scanner started");
+      toast.success("Scanner started successfully!");
     } catch (error: any) {
       console.error("Error starting scanner:", error);
       toast.error("Failed to start scanner: " + error.message);
@@ -175,10 +192,20 @@ const Scanner = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {!scanning ? (
-              <Button onClick={startScanning} className="w-full" size="lg">
-                <Camera className="mr-2 h-5 w-5" />
-                Start Scanning
-              </Button>
+              <>
+                <div className="bg-muted/50 p-4 rounded-lg mb-4 space-y-2">
+                  <p className="text-sm font-medium">Before scanning:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>Allow camera permission when prompted</li>
+                    <li>Ensure good lighting</li>
+                    <li>Hold QR code steady within the frame</li>
+                  </ul>
+                </div>
+                <Button onClick={startScanning} className="w-full" size="lg">
+                  <Camera className="mr-2 h-5 w-5" />
+                  Start Scanning
+                </Button>
+              </>
             ) : (
               <>
                 <div id="qr-reader" className="w-full"></div>

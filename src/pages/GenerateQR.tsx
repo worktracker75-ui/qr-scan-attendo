@@ -215,18 +215,29 @@ const GenerateQR = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-lg mb-4">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Selected:</strong> {selectedStudents.length} of {students.length} students
+                </p>
+              </div>
+              
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={generateQRs} disabled={selectedStudents.length === 0}>
+                <Button 
+                  onClick={generateQRs} 
+                  disabled={selectedStudents.length === 0}
+                  size="lg"
+                >
                   <Download className="mr-2 h-4 w-4" />
-                  Generate QR Codes
+                  1. Generate QR Codes ({selectedStudents.length})
                 </Button>
                 <Button
                   onClick={sendQRsViaEmail}
                   disabled={selectedStudents.length === 0 || qrCodes.size === 0 || sending}
-                  variant="secondary"
+                  variant="default"
+                  size="lg"
                 >
                   <Mail className="mr-2 h-4 w-4" />
-                  {sending ? "Sending..." : "Send QR via Email"}
+                  {sending ? "Sending..." : `2. Send to ${selectedStudents.length} Email(s)`}
                 </Button>
               </div>
 
