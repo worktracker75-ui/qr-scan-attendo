@@ -14,6 +14,7 @@ const Scanner = () => {
   const [scanning, setScanning] = useState(false);
   const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
   const [lastScanned, setLastScanned] = useState<any>(null);
+  const [initScanner, setInitScanner] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -23,9 +24,16 @@ const Scanner = () => {
     };
   }, [scanner]);
 
+  useEffect(() => {
+    if (initScanner && scanning) {
+      initializeScanner();
+      setInitScanner(false);
+    }
+  }, [initScanner, scanning]);
+
   const startScanning = async () => {
     try {
-      console.log("Starting QR scanner...");
+      console.log("Checking camera permissions...");
       
       // Check if browser supports camera
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -55,6 +63,22 @@ const Scanner = () => {
         return;
       }
 
+      // Set scanning to true first to render the DOM element
+      setScanning(true);
+      setInitScanner(true);
+    } catch (error: any) {
+      console.error("Error starting scanner:", error);
+      toast.error("Failed to start scanner: " + (error?.message || "Unknown error"));
+    }
+  };
+
+  const initializeScanner = async () => {
+    try {
+      console.log("Initializing QR scanner...");
+      
+      // Wait a bit for DOM to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const qrScanner = new Html5QrcodeScanner(
         "qr-reader",
         { 
@@ -69,11 +93,11 @@ const Scanner = () => {
       console.log("QR Scanner initialized, rendering...");
       qrScanner.render(onScanSuccess, onScanError);
       setScanner(qrScanner);
-      setScanning(true);
       toast.success("Scanner started successfully!");
     } catch (error: any) {
-      console.error("Error starting scanner:", error);
-      toast.error("Failed to start scanner: " + error.message);
+      console.error("Error initializing scanner:", error);
+      toast.error("Failed to initialize scanner: " + (error?.message || "Unknown error"));
+      setScanning(false);
     }
   };
 
