@@ -32,6 +32,13 @@ const Dashboard = () => {
       color: "bg-primary/10 text-primary",
     },
     {
+      title: "Generate QR Codes",
+      description: "Generate and send QR codes to students",
+      icon: QrCode,
+      path: "/generate-qr",
+      color: "bg-purple-500/10 text-purple-600",
+    },
+    {
       title: "Manage Sessions",
       description: "Create and view lab sessions",
       icon: Calendar,
