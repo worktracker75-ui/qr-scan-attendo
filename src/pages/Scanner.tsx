@@ -5,8 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const Scanner = () => {
   const { user, loading: authLoading } = useAuth();
@@ -15,6 +23,8 @@ const Scanner = () => {
   const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
   const [lastScanned, setLastScanned] = useState<any>(null);
   const [initScanner, setInitScanner] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [scannedDetails, setScannedDetails] = useState<any>(null);
 
   useEffect(() => {
     return () => {
@@ -109,6 +119,17 @@ const Scanner = () => {
     setScanning(false);
   };
 
+  const clearSession = () => {
+    setLastScanned(null);
+    setScannedDetails(null);
+    toast.success("Session cleared");
+  };
+
+  const handleDialogClose = () => {
+    setShowDetailsDialog(false);
+    setScannedDetails(null);
+  };
+
   const onScanSuccess = async (decodedText: string) => {
     try {
       // QR now contains only enrollment number
@@ -179,6 +200,18 @@ const Scanner = () => {
         section: student.section,
       });
 
+      // Show dialog with details
+      setScannedDetails({
+        name: student.name,
+        roll: student.roll,
+        enrollment: student.enrollment,
+        section: student.section || "N/A",
+        labNo: session.lab_no,
+        pcNo: student.system_no || "Not assigned",
+        status: "Present",
+      });
+      setShowDetailsDialog(true);
+
       toast.success(`Attendance marked for ${student.name}`);
     } catch (error: any) {
       toast.error(error.message || "Failed to process QR code");
@@ -204,10 +237,24 @@ const Scanner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 p-6">
       <div className="container mx-auto max-w-2xl">
-        <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/sessions")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Attendance
+            </Button>
+            {lastScanned && (
+              <Button variant="outline" onClick={clearSession}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Session
+              </Button>
+            )}
+          </div>
+        </div>
 
         <Card>
           <CardHeader>
@@ -257,6 +304,59 @@ const Scanner = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-6 w-6" />
+              Attendance Marked Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Student details and attendance status
+            </DialogDescription>
+          </DialogHeader>
+          {scannedDetails && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-semibold">{scannedDetails.name}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Roll No.</p>
+                  <p className="font-semibold">{scannedDetails.roll}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Enrollment</p>
+                  <p className="font-semibold">{scannedDetails.enrollment}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Section</p>
+                  <p className="font-semibold">{scannedDetails.section}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Lab No.</p>
+                  <p className="font-semibold">{scannedDetails.labNo}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">PC No.</p>
+                  <p className="font-semibold">{scannedDetails.pcNo}</p>
+                </div>
+              </div>
+              <div className="bg-success/10 border border-success/20 rounded-lg p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Attendance Status</p>
+                <p className="text-2xl font-bold text-success">{scannedDetails.status}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleDialogClose} className="w-full" size="lg">
+              OK - Continue Scanning
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
