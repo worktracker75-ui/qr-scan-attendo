@@ -1,13 +1,27 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, QrCode, Calendar, FileText, LogOut } from "lucide-react";
+import { Users, QrCode, Calendar, FileText, LogOut, Database } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -22,6 +36,40 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  const handleResetDatabase = async () => {
+    setResetting(true);
+    try {
+      // Delete data from attendance, sessions, and students tables
+      const { error: attendanceError } = await supabase
+        .from("attendance")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (attendanceError) throw attendanceError;
+
+      const { error: sessionsError } = await supabase
+        .from("sessions")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (sessionsError) throw sessionsError;
+
+      const { error: studentsError } = await supabase
+        .from("students")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (studentsError) throw studentsError;
+
+      toast.success("Database reset successfully! All student, session, and attendance data has been cleared.");
+    } catch (error) {
+      console.error("Error resetting database:", error);
+      toast.error("Failed to reset database. Please try again.");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const menuItems = [
     {
@@ -71,10 +119,46 @@ const Dashboard = () => {
               Welcome back! Role: <span className="font-semibold text-foreground">{userRole?.role || "Loading..."}</span>
             </p>
           </div>
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            {userRole?.role === "admin" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Database className="mr-2 h-4 w-4" />
+                    Reset Database
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete all data from:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Students table</li>
+                        <li>Sessions table</li>
+                        <li>Attendance records</li>
+                      </ul>
+                      <p className="mt-2 font-semibold">User roles and profiles will NOT be deleted.</p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleResetDatabase}
+                      disabled={resetting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {resetting ? "Resetting..." : "Yes, Reset Database"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
