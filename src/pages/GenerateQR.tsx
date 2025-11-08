@@ -164,40 +164,67 @@ const GenerateQR = () => {
 
     setSending(true);
     let successCount = 0;
+    let noEmailCount = 0;
+    let failedCount = 0;
 
     for (const studentId of selectedStudents) {
       const student = students.find(s => s.id === studentId);
 
-      if (student && student.email) {
-        try {
-          const { error } = await supabase.functions.invoke("send-email", {
-            body: {
-              to: student.email,
-              subject: "Important Notification - Lab Attendance",
-              html: `
-                <h2>Hello ${student.name},</h2>
-                <div style="background: #f0f9ff; padding: 20px; border-left: 4px solid #0ea5e9; margin: 20px 0;">
-                  <p style="margin: 0; font-size: 16px;">${notification}</p>
-                </div>
-                <p><strong>Enrollment:</strong> ${student.enrollment}</p>
-                <p><strong>Section:</strong> ${student.section || "N/A"}</p>
-                <br>
-                <p>Best regards,<br>Attendance System</p>
-              `,
-            },
-          });
+      if (!student) continue;
 
-          if (error) throw error;
+      if (!student.email || student.email.trim() === "") {
+        console.log(`Student ${student.name} has no email address`);
+        noEmailCount++;
+        continue;
+      }
+
+      try {
+        console.log(`Sending notification to ${student.email}...`);
+        const { data, error } = await supabase.functions.invoke("send-email", {
+          body: {
+            to: student.email,
+            subject: "Important Notification - Lab Attendance",
+            html: `
+              <h2>Hello ${student.name},</h2>
+              <div style="background: #f0f9ff; padding: 20px; border-left: 4px solid #0ea5e9; margin: 20px 0;">
+                <p style="margin: 0; font-size: 16px;">${notification}</p>
+              </div>
+              <p><strong>Enrollment:</strong> ${student.enrollment}</p>
+              <p><strong>Section:</strong> ${student.section || "N/A"}</p>
+              <br>
+              <p>Best regards,<br>Attendance System</p>
+            `,
+          },
+        });
+
+        if (error) {
+          console.error(`Error response for ${student.email}:`, error);
+          failedCount++;
+        } else {
+          console.log(`Successfully sent to ${student.email}`, data);
           successCount++;
-        } catch (error) {
-          console.error(`Failed to send notification to ${student.email}:`, error);
         }
+      } catch (error) {
+        console.error(`Failed to send notification to ${student.email}:`, error);
+        failedCount++;
       }
     }
 
     setSending(false);
     setNotification("");
-    toast.success(`Notification sent to ${successCount} students`);
+    
+    if (successCount > 0) {
+      toast.success(`Notification sent to ${successCount} students`);
+    }
+    if (noEmailCount > 0) {
+      toast.warning(`${noEmailCount} students have no email address`);
+    }
+    if (failedCount > 0) {
+      toast.error(`Failed to send to ${failedCount} students. Check console for details.`);
+    }
+    if (successCount === 0 && noEmailCount === 0 && failedCount === 0) {
+      toast.error("No emails were sent");
+    }
   };
 
   if (authLoading) {
