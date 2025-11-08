@@ -80,7 +80,7 @@ async function sendSMTPEmail(
     // Build email with attachments
     const boundary = "----=_Part_" + Date.now();
     let emailBody = "";
-    emailBody += `From: Attendance System <${smtpEmail}>\r\n`;
+    emailBody += `From: Skill Quiz Lab <${smtpEmail}>\r\n`;
     emailBody += `To: ${to}\r\n`;
     emailBody += `Subject: ${subject}\r\n`;
     emailBody += `MIME-Version: 1.0\r\n`;

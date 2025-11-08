@@ -122,15 +122,58 @@ const GenerateQR = () => {
           const { error } = await supabase.functions.invoke("send-email", {
             body: {
               to: student.email,
-              subject: "Your Attendance QR Code",
+              subject: "🎯 Your Personal Attendance QR Code - Skill Quiz Lab",
               html: `
-                <h2>Hello ${student.name},</h2>
-                <p>Your attendance QR code is attached to this email.</p>
-                <p><strong>Enrollment:</strong> ${student.enrollment}</p>
-                <p><strong>Roll Number:</strong> ${student.roll}</p>
-                <p>Please use this QR code to mark your attendance in lab sessions.</p>
-                <br>
-                <p>Best regards,<br>Attendance System</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 30px auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+                    .header p { margin: 10px 0 0; font-size: 16px; opacity: 0.9; }
+                    .content { padding: 40px 30px; }
+                    .greeting { font-size: 22px; font-weight: 600; color: #667eea; margin-bottom: 20px; }
+                    .info-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                    .info-item { margin: 10px 0; font-size: 15px; }
+                    .info-item strong { color: #667eea; display: inline-block; width: 120px; }
+                    .qr-notice { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 6px; color: #856404; }
+                    .footer { background: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef; }
+                    .footer p { margin: 5px 0; color: #6c757d; font-size: 14px; }
+                    .highlight { background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%); padding: 2px 8px; border-radius: 4px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>🎓 Skill Quiz Lab</h1>
+                      <p>Smart Attendance Management System</p>
+                    </div>
+                    <div class="content">
+                      <div class="greeting">Hello ${student.name}! 👋</div>
+                      <p>We are excited to share your <span class="highlight">personal attendance QR code</span>! This unique code is attached to this email and will be used to mark your presence in all lab sessions.</p>
+                      
+                      <div class="info-box">
+                        <div class="info-item"><strong>📋 Enrollment:</strong> ${student.enrollment}</div>
+                        <div class="info-item"><strong>🎫 Roll Number:</strong> ${student.roll}</div>
+                        <div class="info-item"><strong>👤 Name:</strong> ${student.name}</div>
+                      </div>
+
+                      <div class="qr-notice">
+                        <strong>⚠️ Important:</strong> Please save this QR code on your mobile device. Show it to the instructor during lab sessions to mark your attendance quickly and efficiently.
+                      </div>
+
+                      <p style="margin-top: 30px; font-size: 15px; color: #666;">If you have any questions or face any issues, please contact your lab instructor immediately.</p>
+                    </div>
+                    <div class="footer">
+                      <p style="font-weight: 600; color: #667eea; margin-bottom: 10px;">Skill Quiz Lab</p>
+                      <p>Building Skills, One Quiz at a Time 🚀</p>
+                      <p style="margin-top: 15px; font-size: 12px; color: #999;">This is an automated message. Please do not reply to this email.</p>
+                    </div>
+                  </div>
+                </body>
+                </html>
               `,
               attachments: [{
                 filename: `qr_${student.enrollment}.png`,
@@ -183,16 +226,59 @@ const GenerateQR = () => {
         const { data, error } = await supabase.functions.invoke("send-email", {
           body: {
             to: student.email,
-            subject: "Important Notification - Lab Attendance",
+            subject: "📢 Important Lab Notification - Skill Quiz Lab",
             html: `
-              <h2>Hello ${student.name},</h2>
-              <div style="background: #f0f9ff; padding: 20px; border-left: 4px solid #0ea5e9; margin: 20px 0;">
-                <p style="margin: 0; font-size: 16px;">${notification}</p>
-              </div>
-              <p><strong>Enrollment:</strong> ${student.enrollment}</p>
-              <p><strong>Section:</strong> ${student.section || "N/A"}</p>
-              <br>
-              <p>Best regards,<br>Attendance System</p>
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <style>
+                  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; margin: 0; padding: 0; }
+                  .container { max-width: 600px; margin: 30px auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+                  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+                  .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+                  .header p { margin: 10px 0 0; font-size: 16px; opacity: 0.9; }
+                  .content { padding: 40px 30px; }
+                  .greeting { font-size: 22px; font-weight: 600; color: #667eea; margin-bottom: 20px; }
+                  .notification-box { background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-left: 5px solid #667eea; padding: 25px; margin: 25px 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+                  .notification-box p { margin: 0; font-size: 16px; font-weight: 500; color: #2d3748; line-height: 1.8; }
+                  .info-box { background: #f8f9ff; padding: 20px; margin: 25px 0; border-radius: 6px; border: 1px solid #e8ebff; }
+                  .info-item { margin: 10px 0; font-size: 15px; }
+                  .info-item strong { color: #667eea; display: inline-block; width: 100px; }
+                  .footer { background: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef; }
+                  .footer p { margin: 5px 0; color: #6c757d; font-size: 14px; }
+                  .alert-icon { font-size: 32px; margin-bottom: 10px; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h1>🎓 Skill Quiz Lab</h1>
+                    <p>Smart Attendance Management System</p>
+                  </div>
+                  <div class="content">
+                    <div class="alert-icon">📢</div>
+                    <div class="greeting">Hello ${student.name}! 👋</div>
+                    <p style="margin-bottom: 20px;">We have an important update for you:</p>
+                    
+                    <div class="notification-box">
+                      <p>${notification}</p>
+                    </div>
+
+                    <div class="info-box">
+                      <div class="info-item"><strong>📋 Enrollment:</strong> ${student.enrollment}</div>
+                      <div class="info-item"><strong>📚 Section:</strong> ${student.section || "N/A"}</div>
+                    </div>
+
+                    <p style="margin-top: 30px; font-size: 15px; color: #666;">Please take note of this information and act accordingly. For any queries, contact your lab instructor.</p>
+                  </div>
+                  <div class="footer">
+                    <p style="font-weight: 600; color: #667eea; margin-bottom: 10px;">Skill Quiz Lab</p>
+                    <p>Building Skills, One Quiz at a Time 🚀</p>
+                    <p style="margin-top: 15px; font-size: 12px; color: #999;">This is an automated message. Please do not reply to this email.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
             `,
           },
         });
