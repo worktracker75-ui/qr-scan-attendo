@@ -11,14 +11,11 @@ import { z } from "zod";
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  fullName: z.string().min(2, "Name must be at least 2 characters").optional(),
 });
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -38,39 +35,17 @@ const Auth = () => {
       const validationData = authSchema.parse({
         email,
         password,
-        fullName: isLogin ? undefined : fullName,
       });
 
-      if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: validationData.email,
-          password: validationData.password,
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: validationData.email,
+        password: validationData.password,
+      });
 
-        if (error) throw error;
-        if (data.session) {
-          toast.success("Login successful!");
-          navigate("/dashboard");
-        }
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email: validationData.email,
-          password: validationData.password,
-          options: {
-            data: {
-              full_name: validationData.fullName,
-            },
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-
-        if (error) throw error;
-        if (data.session) {
-          toast.success("Account created successfully!");
-          navigate("/dashboard");
-        } else {
-          toast.success("Account created! Please check your email.");
-        }
+      if (error) throw error;
+      if (data.session) {
+        toast.success("Login successful!");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -88,7 +63,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? "Login" : "Create Account"}
+            Login
           </CardTitle>
           <CardDescription className="text-center">
             QR Attendance System
@@ -96,18 +71,6 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
-                />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -131,18 +94,9 @@ const Auth = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : isLogin ? "Login" : "Sign Up"}
+              {loading ? "Please wait..." : "Login"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
-            >
-              {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>
