@@ -12,6 +12,7 @@ import Sessions from "./pages/Sessions";
 import Scanner from "./pages/Scanner";
 import Attendance from "./pages/Attendance";
 import GenerateQR from "./pages/GenerateQR";
+import ManageUsers from "./pages/ManageUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/scanner" element={<Scanner />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/generate-qr" element={<GenerateQR />} />
+            <Route path="/manage-users" element={<ManageUsers />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

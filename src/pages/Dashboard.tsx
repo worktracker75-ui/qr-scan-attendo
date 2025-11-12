@@ -127,6 +127,16 @@ const Dashboard = () => {
     }
   };
 
+  const adminMenuItems = userRole?.role === "admin" ? [
+    {
+      title: "Manage Users",
+      description: "Create, edit, and delete user accounts",
+      icon: UserPlus,
+      path: "/manage-users",
+      color: "bg-orange-500/10 text-orange-600",
+    },
+  ] : [];
+
   const menuItems = [
     {
       title: "Upload Students",
@@ -163,6 +173,7 @@ const Dashboard = () => {
       path: "/attendance",
       color: "bg-success/10 text-success",
     },
+    ...adminMenuItems,
   ];
 
   return (
