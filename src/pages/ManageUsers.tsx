@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Edit, ArrowLeft } from "lucide-react";
+import { Loader2, Trash2, Edit, ArrowLeft, Mail } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +52,7 @@ const ManageUsers = () => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [newRole, setNewRole] = useState<"admin" | "employee">("employee");
   const [updating, setUpdating] = useState(false);
+  const [sendingCredentials, setSendingCredentials] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -174,6 +175,47 @@ const ManageUsers = () => {
     }
   };
 
+  const handleSendCredentials = async (userProfile: UserProfile) => {
+    setSendingCredentials(userProfile.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resend-credentials`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session?.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userProfile.id,
+          email: userProfile.email,
+          full_name: userProfile.full_name,
+          role: userProfile.role,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send credentials");
+      }
+
+      toast({
+        title: "Success",
+        description: `Credentials sent to ${userProfile.email}`,
+      });
+    } catch (error) {
+      console.error("Error sending credentials:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send credentials",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingCredentials(null);
+    }
+  };
+
   if (loading || loadingUsers) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -221,6 +263,20 @@ const ManageUsers = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSendCredentials(userProfile)}
+                        disabled={sendingCredentials === userProfile.id}
+                        title="Send credentials email"
+                      >
+                        {sendingCredentials === userProfile.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Mail className="h-4 w-4" />
+                        )}
+                      </Button>
+
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
